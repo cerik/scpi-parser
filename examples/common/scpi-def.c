@@ -108,8 +108,6 @@ static const scpi_command_t scpi_commands[] = {
     {.pattern = "MEASure:FRESistance?", .callback = SCPI_StubQ,},
     {.pattern = "MEASure:FREQuency?", .callback = SCPI_StubQ,},
     {.pattern = "MEASure:PERiod?", .callback = SCPI_StubQ,},
-    
-    {.pattern = "SYSTem:COMMunication:TCPIP:CONTROL?", .callback = SCPI_SystemCommTcpipControlQ,},
 
     SCPI_CMD_LIST_END
 };
@@ -119,8 +117,7 @@ static scpi_interface_t scpi_interface = {
     .error = SCPI_Error,
     .reset = SCPI_Reset,
     .test = SCPI_Test,
-    .control = SCPI_Control,
-    .flush = SCPI_Flush,
+    .srq = SCPI_Srq,
 };
 
 #define SCPI_INPUT_BUFFER_LENGTH 256

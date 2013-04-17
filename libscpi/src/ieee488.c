@@ -39,8 +39,6 @@
 #include "scpi/error.h"
 #include "scpi/constants.h"
 
-#include <stdio.h>
-
 /**
  * Update register value
  * @param name - register name
@@ -60,12 +58,6 @@ scpi_reg_val_t SCPI_RegGet(scpi_t * context, scpi_reg_name_t name) {
     } else {
         return 0;
     }
-}
-
-static size_t writeControl(scpi_t * context, int ctrl, scpi_reg_val_t val) {
-    if (context && context->interface && context->interface->control) {
-        context->interface->control(context, ctrl, val);
-    }    
 }
 
 /**
@@ -139,8 +131,8 @@ void SCPI_RegSet(scpi_t * context, scpi_reg_name_t name, scpi_reg_val_t val) {
     // set updated register value
     context->registers[name] = val;
 
-    if (srq) {
-        writeControl(context, SCPI_CTRL_SRQ, SCPI_RegGet(context, SCPI_REG_STB));
+    if (srq && context->interface && context->interface->srq) {
+        context->interface->srq(context);
     }
 }
 
