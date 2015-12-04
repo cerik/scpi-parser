@@ -37,28 +37,28 @@
 #ifndef SCPI_PARSER_H
 #define	SCPI_PARSER_H
 
-#include "scpi/types.h"
-#include "scpi/debug.h"
+#include "types.h"
+#include "debug.h"
 
-#ifdef	__cplusplus
+#ifdef  __cplusplus
 extern "C" {
 #endif
 
     void SCPI_Init(scpi_t * context);
 
-    int SCPI_Input(scpi_t * context, const char * data, size_t len);
-    int SCPI_Parse(scpi_t * context, const char * data, size_t len);
+    int SCPI_Input(scpi_t * context, const char * data, UINT32 len);
+    int SCPI_Parse(scpi_t * context, const char * data, UINT32 len);
 
 
-    size_t SCPI_ResultString(scpi_t * context, const char * data);
-    size_t SCPI_ResultInt(scpi_t * context, int32_t val);
-    size_t SCPI_ResultDouble(scpi_t * context, double val);
-    size_t SCPI_ResultText(scpi_t * context, const char * data);
+    UINT32 SCPI_ResultString(scpi_t * context, const char * data);
+    UINT32 SCPI_ResultInt(scpi_t * context, INT32 val);
+    UINT32 SCPI_ResultDouble(scpi_t * context, double val);
+    UINT32 SCPI_ResultText(scpi_t * context, const char * data);
 
-    bool_t SCPI_ParamInt(scpi_t * context, int32_t * value, bool_t mandatory);
-    bool_t SCPI_ParamDouble(scpi_t * context, double * value, bool_t mandatory);
-    bool_t SCPI_ParamString(scpi_t * context, char ** value, size_t * len, bool_t mandatory);
-    bool_t SCPI_ParamText(scpi_t * context, char ** value, size_t * len, bool_t mandatory);    
+    boolean SCPI_ParamInt(scpi_t * context, INT32 * value, boolean mandatory);
+    boolean SCPI_ParamDouble(scpi_t * context, double * value, boolean mandatory);
+    boolean SCPI_ParamString(scpi_t * context, const char ** value, UINT32 * len, boolean mandatory);
+    boolean SCPI_ParamText(scpi_t * context, const char ** value, UINT32 * len, boolean mandatory);    
 
 
 #ifdef	__cplusplus

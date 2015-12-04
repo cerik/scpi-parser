@@ -26,28 +26,42 @@
  */
 
 /**
- * @file   scpi_debug.c
+ * @file   scpi_fifo.h
  * @date   Thu Nov 15 10:58:45 UTC 2012
  * 
- * @brief  Debugging SCPI
+ * @brief  basic FIFO implementation
  * 
  * 
  */
 
-#include <stdio.h>
-#include "scpi/debug.h"
+#ifndef SCPI_FIFO_H
+#define	SCPI_FIFO_H
 
-/**
- * Debug function: show current command and its parameters
- * @param context
- * @return 
- */
-bool_t SCPI_DebugCommand(scpi_t * context) {
-	size_t res;
-	printf("**DEBUG: %s (\"", context->paramlist.cmd->pattern);
-	res = fwrite(context->paramlist.parameters, 1, context->paramlist.length, stdout);
-	(void)res;
-	printf("\" - %ld)\r\n", context->paramlist.length);
-	
-	return TRUE;
+#include "types.h"
+
+#ifdef	__cplusplus
+extern "C" {
+#endif
+
+
+#define FIFO_SIZE 16
+
+    struct _fifo_t {
+        INT16 wr;
+        INT16 rd;
+        INT16 size;
+        INT16 data[FIFO_SIZE];
+    };
+    typedef struct _fifo_t fifo_t;
+
+    void fifo_init(fifo_t * fifo);
+    void fifo_clear(fifo_t * fifo);
+    boolean fifo_add(fifo_t * fifo, INT16 value);
+    boolean fifo_remove(fifo_t * fifo, INT16 * value);
+    boolean fifo_count(fifo_t * fifo, INT16 * value);
+
+#ifdef	__cplusplus
 }
+#endif
+
+#endif	/* SCPI_FIFO_H */

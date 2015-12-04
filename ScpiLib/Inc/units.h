@@ -26,34 +26,32 @@
  */
 
 /**
- * @file   scpi_debug.h
+ * @file   scpi_units.h
  * @date   Thu Nov 15 10:58:45 UTC 2012
  * 
- * @brief  SCPI debug function
+ * @brief  SCPI Units
  * 
  * 
  */
 
-#ifndef SCPI_DEBUG_H
-#define	SCPI_DEBUG_H
+#ifndef SCPI_UNITS_H
+#define SCPI_UNITS_H
 
-#include "scpi/types.h"
+#include "types.h"
 
 #ifdef	__cplusplus
 extern "C" {
 #endif
 
-
-    //#define SCPI_DEBUG_COMMAND(a)   scpi_debug_command(a)
-#define SCPI_DEBUG_COMMAND(a)  
-
-
-    bool_t SCPI_DebugCommand(scpi_t * context);
-
+    extern const scpi_unit_def_t scpi_units_def[];
+    extern const scpi_special_number_def_t scpi_special_numbers_def[];
+    
+    boolean SCPI_ParamNumber(scpi_t * context, scpi_number_t * value, boolean mandatory);
+    size_t SCPI_NumberToStr(scpi_t * context, scpi_number_t * value, char * str, size_t len);
 
 #ifdef	__cplusplus
 }
 #endif
 
-#endif	/* SCPI_DEBUG_H */
+#endif	/* SCPI_UNITS_H */
 

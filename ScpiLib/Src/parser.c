@@ -36,27 +36,28 @@
 
 #include <ctype.h>
 #include <string.h>
-
-#include "scpi/parser.h"
+#include "config.h"
+#include "parser.h"
 #include "utils.h"
-#include "scpi/error.h"
+#include "error.h"
+#include "constants.h"
 
 
-static size_t patternSeparatorPos(const char * pattern, size_t len);
-static size_t cmdSeparatorPos(const char * cmd, size_t len);
-static size_t cmdTerminatorPos(const char * cmd, size_t len);
-static size_t cmdlineSeparatorPos(const char * cmd, size_t len);
-static char * cmdlineSeparator(const char * cmd, size_t len);
-static char * cmdlineTerminator(const char * cmd, size_t len);
-static const char * cmdlineNext(const char * cmd, size_t len);
-static bool_t cmdMatch(const char * pattern, const char * cmd, size_t len);
+static UINT32 patternSeparatorPos(const char * pattern, UINT32 len);
+static UINT32 cmdSeparatorPos(const char * cmd, UINT32 len);
+static UINT32 cmdTerminatorPos(const char * cmd, UINT32 len);
+static UINT32 cmdlineSeparatorPos(const char * cmd, UINT32 len);
+static const char * cmdlineSeparator(const char * cmd, UINT32 len);
+static const char * cmdlineTerminator(const char * cmd, UINT32 len);
+static const char * cmdlineNext(const char * cmd, UINT32 len);
+static boolean cmdMatch(const char * pattern, const char * cmd, UINT32 len);
 
-static void paramSkipBytes(scpi_t * context, size_t num);
+static void paramSkipBytes(scpi_t * context, UINT32 num);
 static void paramSkipWhitespace(scpi_t * context);
-static bool_t paramNext(scpi_t * context, bool_t mandatory);
+static boolean paramNext(scpi_t * context, boolean mandatory);
 
 /*
-int _strnicmp(const char* s1, const char* s2, size_t len) {
+int _strnicmp(const char* s1, const char* s2, UINT32 len) {
     int result = 0;
     int i;
 
@@ -79,9 +80,8 @@ int _strnicmp(const char* s1, const char* s2, size_t len) {
  * @param len - max search length
  * @return position of separator or len
  */
-size_t patternSeparatorPos(const char * pattern, size_t len) {
-
-    char * separator = strnpbrk(pattern, len, "?:[]");
+UINT32 patternSeparatorPos(const char * pattern, UINT32 len) {
+    const char *separator = strnpbrk(pattern, len, "?:[]");
     if (separator == NULL) {
         return len;
     } else {
@@ -95,9 +95,9 @@ size_t patternSeparatorPos(const char * pattern, size_t len) {
  * @param len - max search length
  * @return position of separator or len
  */
-size_t cmdSeparatorPos(const char * cmd, size_t len) {
-    char * separator = strnpbrk(cmd, len, ":?");
-    size_t result;
+UINT32 cmdSeparatorPos(const char * cmd, UINT32 len) {
+    const char * separator = strnpbrk(cmd, len, ":?");
+    UINT32 result;
     if (separator == NULL) {
         result = len;
     } else {
@@ -112,9 +112,11 @@ size_t cmdSeparatorPos(const char * cmd, size_t len) {
  * @param cmd - input command
  * @param len - max search length
  * @return position of terminator or len
+
+ * Cmd Terminator Flag include : [;, ,\r,\n,\t]
  */
-size_t cmdTerminatorPos(const char * cmd, size_t len) {
-    char * terminator = strnpbrk(cmd, len, "; \r\n\t");
+UINT32 cmdTerminatorPos(const char * cmd, UINT32 len) {
+    const char * terminator = strnpbrk(cmd, len, "; \r\n\t");
     if (terminator == NULL) {
         return len;
     } else {
@@ -128,7 +130,7 @@ size_t cmdTerminatorPos(const char * cmd, size_t len) {
  * @param len - max search length
  * @return pointer to line separator or NULL
  */
-char * cmdlineSeparator(const char * cmd, size_t len) {
+const char * cmdlineSeparator(const char * cmd, UINT32 len) {
     return strnpbrk(cmd, len, ";\r\n");
 }
 
@@ -138,7 +140,7 @@ char * cmdlineSeparator(const char * cmd, size_t len) {
  * @param len - max search length
  * @return pointer to command line terminator or NULL
  */
-char * cmdlineTerminator(const char * cmd, size_t len) {
+const char * cmdlineTerminator(const char * cmd, UINT32 len) {
     return strnpbrk(cmd, len, "\r\n");
 }
 
@@ -148,8 +150,8 @@ char * cmdlineTerminator(const char * cmd, size_t len) {
  * @param len - max search length
  * @return position of line separator or len
  */
-size_t cmdlineSeparatorPos(const char * cmd, size_t len) {
-    char * separator = cmdlineSeparator(cmd, len);
+UINT32 cmdlineSeparatorPos(const char * cmd, UINT32 len) {
+    const char * separator = cmdlineSeparator(cmd, len);
     if (separator == NULL) {
         return len;
     } else {
@@ -163,7 +165,7 @@ size_t cmdlineSeparatorPos(const char * cmd, size_t len) {
  * @param len - max search length
  * @return Pointer to next part of command
  */
-const char * cmdlineNext(const char * cmd, size_t len) {
+const char * cmdlineNext(const char * cmd, UINT32 len) {
     const char * separator = cmdlineSeparator(cmd, len);
     if (separator == NULL) {
         return cmd + len;
@@ -179,7 +181,7 @@ const char * cmdlineNext(const char * cmd, size_t len) {
  * @param len - max search length
  * @return TRUE if pattern matches, FALSE otherwise
  */
-bool_t cmdMatch(const char * pattern, const char * cmd, size_t len) {
+boolean cmdMatch(const char * pattern, const char * cmd, UINT32 len) {
     int result = FALSE;
 
     const char * pattern_ptr = pattern;
@@ -187,7 +189,7 @@ bool_t cmdMatch(const char * pattern, const char * cmd, size_t len) {
     const char * pattern_end = pattern + pattern_len;
 
     const char * cmd_ptr = cmd;
-    size_t cmd_len = strnlen(cmd, len);
+    UINT32 cmd_len = SCPI_strnlen(cmd, len);
     const char * cmd_end = cmd + cmd_len;
 
     while (1) {
@@ -199,24 +201,24 @@ bool_t cmdMatch(const char * pattern, const char * cmd, size_t len) {
             cmd_ptr = cmd_ptr + cmd_sep_pos;
             result = TRUE;
 
-            // command is complete
+            /* command is complete */
             if ((pattern_ptr == pattern_end) && (cmd_ptr >= cmd_end)) {
                 break;
             }
 
-            // pattern complete, but command not
+            /* pattern complete, but command not */
             if ((pattern_ptr == pattern_end) && (cmd_ptr < cmd_end)) {
                 result = FALSE;
                 break;
             }
 
-            // command complete, but pattern not
+            /* command complete, but pattern not */
             if (cmd_ptr >= cmd_end) {
                 result = FALSE;
                 break;
             }
 
-            // both command and patter contains command separator at this position
+            /* both command and patter contains command separator at this position */
             if ((pattern_ptr[0] == cmd_ptr[0]) && ((pattern_ptr[0] == ':') || (pattern_ptr[0] == '?'))) {
                 pattern_ptr = pattern_ptr + 1;
                 cmd_ptr = cmd_ptr + 1;
@@ -240,7 +242,7 @@ bool_t cmdMatch(const char * pattern, const char * cmd, size_t len) {
  * @param len - lenght of data to be written
  * @return number of bytes written
  */
-static inline size_t writeData(scpi_t * context, const char * data, size_t len) {
+static UINT32 writeData(scpi_t * context, const char * data, UINT32 len) {
     return context->interface->write(context, data, len);
 }
 
@@ -249,7 +251,7 @@ static inline size_t writeData(scpi_t * context, const char * data, size_t len) 
  * @param context
  * @return
  */
-static inline int flushData(scpi_t * context) {
+static int flushData(scpi_t * context) {
     if (context && context->interface && context->interface->flush) {
         return context->interface->flush(context);
     } else {
@@ -262,7 +264,7 @@ static inline int flushData(scpi_t * context) {
  * @param context
  * @return number of bytes written
  */
-static inline size_t writeDelimiter(scpi_t * context) {
+static UINT32 writeDelimiter(scpi_t * context) {
     if (context->output_count > 0) {
         return writeData(context, ", ", 2);
     } else {
@@ -271,13 +273,13 @@ static inline size_t writeDelimiter(scpi_t * context) {
 }
 
 /**
- * Zapis nove radky na SCPI vystup
+ * Conditionaly write "New Line"
  * @param context
- * @return pocet zapsanych znaku
+ * @return number of characters written
  */
-static inline size_t writeNewLine(scpi_t * context) {
-    size_t len;
+static UINT32 writeNewLine(scpi_t * context) {
     if (context->output_count > 0) {
+        UINT32 len;
         len = writeData(context, "\r\n", 2);
         flushData(context);
         return len;
@@ -287,60 +289,95 @@ static inline size_t writeNewLine(scpi_t * context) {
 }
 
 /**
+ * Process command
+ * @param context
+ */
+static void processCommand(scpi_t * context) {
+    const scpi_command_t * cmd = context->paramlist.cmd;
+
+    context->cmd_error = FALSE;
+    context->output_count = 0;
+    context->input_count = 0;
+
+    SCPI_DEBUG_COMMAND(context);
+    /* if callback exists - call command callback */
+    if (cmd->callback != NULL) {
+        if ((cmd->callback(context) != SCPI_RES_OK) && !context->cmd_error) {
+            SCPI_ErrorPush(context, SCPI_ERROR_EXECUTION_ERROR);
+        }
+    }
+
+    /* conditionaly write new line */
+    writeNewLine(context);
+
+    /* skip all whitespaces */
+    paramSkipWhitespace(context);
+
+    /* set error if command callback did not read all parameters */
+    if (context->paramlist.length != 0 && !context->cmd_error) {
+        SCPI_ErrorPush(context, SCPI_ERROR_PARAMETER_NOT_ALLOWED);
+    }
+}
+
+/**
+ * Cycle all patterns and search matching pattern. Execute command callback.
+ * @param context
+ * @result TRUE if context->paramlist is filled with correct values
+ */
+static boolean findCommand(scpi_t * context, const char * cmdline_ptr, UINT32 cmdline_len, UINT32 cmd_len) {
+    INT32 i;
+    const scpi_command_t * cmd;
+
+    for (i = 0; context->cmdlist[i].pattern != NULL; i++) {
+        cmd = &context->cmdlist[i];
+        if (cmdMatch(cmd->pattern, cmdline_ptr, cmd_len)) {
+            context->paramlist.cmd = cmd;
+            context->paramlist.parameters = cmdline_ptr + cmd_len;
+            context->paramlist.length = cmdline_len - cmd_len;
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+/**
  * Parse one command line
  * @param context
- * @param data - complete command line
- * @param len - command line length
+ * @param data - complete command line, command field & parameter field.
+ * @param len - command line length.
  * @return 1 if the last evaluated command was found
  */
-int SCPI_Parse(scpi_t * context, const char * data, size_t len) {
-    int32_t i;
+int SCPI_Parse(scpi_t * context, const char * data, UINT32 len) {
     int result = 0;
     const char * cmdline_end = data + len;
     const char * cmdline_ptr = data;
-    size_t cmd_len;
+    char * cmdline_ptr_prev = NULL;
+    UINT32 cmd_len_prev = 0;
+    UINT32 cmd_len;
+    UINT32 cmdline_len;
+
     if (context == NULL) {
         return -1;
     }
 
     while (cmdline_ptr < cmdline_end) {
-
         result = 0;
         cmd_len = cmdTerminatorPos(cmdline_ptr, cmdline_end - cmdline_ptr);
         if (cmd_len > 0) {
-            for (i = 0; context->cmdlist[i].pattern != NULL; i++) {
-                if (cmdMatch(context->cmdlist[i].pattern, cmdline_ptr, cmd_len)) {
-                    if (context->cmdlist[i].callback != NULL) {
-                        context->cmd_error = FALSE;
-                        context->paramlist.cmd = &context->cmdlist[i];
-                        context->paramlist.parameters = cmdline_ptr + cmd_len;
-                        context->paramlist.length = cmdlineSeparatorPos(context->paramlist.parameters, cmdline_end - context->paramlist.parameters);
-                        context->output_count = 0;
-                        context->input_count = 0;
-
-                        SCPI_DEBUG_COMMAND(context);
-                        if ((context->cmdlist[i].callback(context) != SCPI_RES_OK) && !context->cmd_error) {
-                            SCPI_ErrorPush(context, SCPI_ERROR_EXECUTION_ERROR);                            
-                        }
-
-                        writeNewLine(context); // conditionaly write new line
-
-                        paramSkipWhitespace(context);
-                        if (context->paramlist.length != 0 && !context->cmd_error) {
-                            SCPI_ErrorPush(context, SCPI_ERROR_PARAMETER_NOT_ALLOWED);
-                        }
-
-                        result = 1;
-                        break;
-                    }
-                }
-            }
-            if (result == 0) {
+            composeCompoundCommand(cmdline_ptr_prev, cmd_len_prev,
+                                    (char**)&cmdline_ptr, &cmd_len);
+            cmdline_len = cmdlineSeparatorPos(cmdline_ptr, cmdline_end - cmdline_ptr);
+            if(findCommand(context, cmdline_ptr, cmdline_len, cmd_len)) {
+                processCommand(context);
+                result = 1;
+                cmdline_ptr_prev = (char*)cmdline_ptr;
+                cmd_len_prev = cmd_len;
+            } else {
                 SCPI_ErrorPush(context, SCPI_ERROR_UNDEFINED_HEADER);
             }
         }
-        cmdline_ptr = cmdlineNext(cmdline_ptr, cmdline_end - cmdline_ptr);
-
+        cmdline_ptr  = cmdlineNext(cmdline_ptr, cmdline_end - cmdline_ptr);
+        cmdline_ptr += skipWhitespace(cmdline_ptr, cmdline_end - cmdline_ptr);
     }
     return result;
 }
@@ -367,16 +404,16 @@ void SCPI_Init(scpi_t * context) {
  * @param len - length of data
  * @return 
  */
-int SCPI_Input(scpi_t * context, const char * data, size_t len) {
+int SCPI_Input(scpi_t * context, const char * data, UINT32 len) {
     int result = 0;
-    size_t buffer_free;
-    char * cmd_term;
-    int ws;
+    const char * cmd_term;
     if (len == 0) {
         context->buffer.data[context->buffer.position] = 0;
         result = SCPI_Parse(context, context->buffer.data, context->buffer.position);
         context->buffer.position = 0;
     } else {
+        UINT32 buffer_free;
+        int ws;
         buffer_free = context->buffer.length - context->buffer.position;
         if (len > (buffer_free - 1)) {
             return -1;
@@ -385,11 +422,18 @@ int SCPI_Input(scpi_t * context, const char * data, size_t len) {
         context->buffer.position += len;
         context->buffer.data[context->buffer.position] = 0;
 
+        //Skip the header space characters.
         ws = skipWhitespace(context->buffer.data, context->buffer.position);
+        //Return the cmd terminal position,otherwise return NULL. Cmd terminal flag: \n or \r
+        //This position include command field & parameter field.
         cmd_term = cmdlineTerminator(context->buffer.data + ws, context->buffer.position - ws);
         if (cmd_term != NULL) {
             int curr_len = cmd_term - context->buffer.data;
+            
+            //Analizy the command
             result = SCPI_Parse(context, context->buffer.data + ws, curr_len - ws);
+
+            //Move the next command to the begining position of the buffer.
             memmove(context->buffer.data, cmd_term, context->buffer.position - curr_len);
             context->buffer.position -= curr_len;
         }
@@ -406,9 +450,9 @@ int SCPI_Input(scpi_t * context, const char * data, size_t len) {
  * @param data
  * @return 
  */
-size_t SCPI_ResultString(scpi_t * context, const char * data) {
-    size_t len = strlen(data);
-    size_t result = 0;
+UINT32 SCPI_ResultString(scpi_t * context, const char * data) {
+    UINT32 len = strlen(data);
+    UINT32 result = 0;
     result += writeDelimiter(context);
     result += writeData(context, data, len);
     context->output_count++;
@@ -421,14 +465,24 @@ size_t SCPI_ResultString(scpi_t * context, const char * data) {
  * @param val
  * @return 
  */
-size_t SCPI_ResultInt(scpi_t * context, int32_t val) {
+UINT32 SCPI_ResultInt(scpi_t * context, INT32 val) {
     char buffer[12];
-    size_t result = 0;
-    size_t len = longToStr(val, buffer, sizeof (buffer));
+    UINT32 result = 0;
+    UINT32 len = longToStr(val, buffer, sizeof (buffer));
     result += writeDelimiter(context);
     result += writeData(context, buffer, len);
     context->output_count++;
     return result;
+}
+
+/**
+ * Write booleanean value to the result
+ * @param context
+ * @param val
+ * @return 
+ */
+UINT32 SCPI_ResultBool(scpi_t * context, boolean val) {
+	return SCPI_ResultInt(context, val ? 1 : 0);
 }
 
 /**
@@ -437,10 +491,10 @@ size_t SCPI_ResultInt(scpi_t * context, int32_t val) {
  * @param val
  * @return 
  */
-size_t SCPI_ResultDouble(scpi_t * context, double val) {
+UINT32 SCPI_ResultDouble(scpi_t * context, double val) {
     char buffer[32];
-    size_t result = 0;
-    size_t len = doubleToStr(val, buffer, sizeof (buffer));
+    UINT32 result = 0;
+    UINT32 len = doubleToStr(val, buffer, sizeof (buffer));
     result += writeDelimiter(context);
     result += writeData(context, buffer, len);
     context->output_count++;
@@ -454,8 +508,8 @@ size_t SCPI_ResultDouble(scpi_t * context, double val) {
  * @param data
  * @return 
  */
-size_t SCPI_ResultText(scpi_t * context, const char * data) {
-    size_t result = 0;
+UINT32 SCPI_ResultText(scpi_t * context, const char * data) {
+    UINT32 result = 0;
     result += writeDelimiter(context);
     result += writeData(context, "\"", 1);
     result += writeData(context, data, strlen(data));
@@ -471,7 +525,7 @@ size_t SCPI_ResultText(scpi_t * context, const char * data) {
  * @param context
  * @param num
  */
-void paramSkipBytes(scpi_t * context, size_t num) {
+void paramSkipBytes(scpi_t * context, UINT32 num) {
     if (context->paramlist.length < num) {
         num = context->paramlist.length;
     }
@@ -484,7 +538,7 @@ void paramSkipBytes(scpi_t * context, size_t num) {
  * @param context
  */
 void paramSkipWhitespace(scpi_t * context) {
-    size_t ws = skipWhitespace(context->paramlist.parameters, context->paramlist.length);
+    UINT32 ws = skipWhitespace(context->paramlist.parameters, context->paramlist.length);
     paramSkipBytes(context, ws);
 }
 
@@ -494,7 +548,7 @@ void paramSkipWhitespace(scpi_t * context) {
  * @param mandatory
  * @return 
  */
-bool_t paramNext(scpi_t * context, bool_t mandatory) {
+boolean paramNext(scpi_t * context, boolean mandatory) {
     paramSkipWhitespace(context);
     if (context->paramlist.length == 0) {
         if (mandatory) {
@@ -522,10 +576,10 @@ bool_t paramNext(scpi_t * context, bool_t mandatory) {
  * @param mandatory
  * @return 
  */
-bool_t SCPI_ParamInt(scpi_t * context, int32_t * value, bool_t mandatory) {
-    char * param;
-    size_t param_len;
-    size_t num_len;
+boolean SCPI_ParamInt(scpi_t * context, INT32 * value, boolean mandatory) {
+    const char * param;
+    UINT32 param_len;
+    UINT32 num_len;
 
     if (!value) {
         return FALSE;
@@ -552,10 +606,10 @@ bool_t SCPI_ParamInt(scpi_t * context, int32_t * value, bool_t mandatory) {
  * @param mandatory
  * @return 
  */
-bool_t SCPI_ParamDouble(scpi_t * context, double * value, bool_t mandatory) {
-    char * param;
-    size_t param_len;
-    size_t num_len;
+boolean SCPI_ParamDouble(scpi_t * context, double * value, boolean mandatory) {
+    const char * param;
+    UINT32 param_len;
+    UINT32 num_len;
 
     if (!value) {
         return FALSE;
@@ -583,8 +637,8 @@ bool_t SCPI_ParamDouble(scpi_t * context, double * value, bool_t mandatory) {
  * @param mandatory
  * @return 
  */
-bool_t SCPI_ParamString(scpi_t * context, char ** value, size_t * len, bool_t mandatory) {
-    size_t length;
+boolean SCPI_ParamString(scpi_t * context, const char ** value, UINT32 * len, boolean mandatory) {
+    UINT32 length;
 
     if (!value || !len) {
         return FALSE;
@@ -614,8 +668,8 @@ bool_t SCPI_ParamString(scpi_t * context, char ** value, size_t * len, bool_t ma
  * @param mandatory
  * @return 
  */
-bool_t SCPI_ParamText(scpi_t * context, char ** value, size_t * len, bool_t mandatory) {
-    size_t length;
+boolean SCPI_ParamText(scpi_t * context, const char ** value, UINT32 * len, boolean mandatory) {
+    UINT32 length;
 
     if (!value || !len) {
         return FALSE;
@@ -635,3 +689,77 @@ bool_t SCPI_ParamText(scpi_t * context, char ** value, size_t * len, bool_t mand
 
     return FALSE;
 }
+
+/**
+ * Parse booleanean parameter as described in the spec SCPI-99 7.3 booleanean Program Data
+ * @param context
+ * @param value
+ * @param mandatory
+ * @return 
+ */
+boolean SCPI_Paramboolean(scpi_t * context, boolean * value, boolean mandatory) {
+    const char * param;
+    UINT32 param_len;
+    UINT32 num_len;
+    INT32 i;
+
+    if (!value) {
+        return FALSE;
+    }
+
+    if (!SCPI_ParamString(context, &param, &param_len, mandatory)) {
+        return FALSE;
+    }
+
+    if (matchPattern("ON", 2, param, param_len)) {
+        *value = TRUE;
+    } else if (matchPattern("OFF", 3, param, param_len)) {
+        *value = FALSE;
+    } else {
+        num_len = strToLong(param, &i);
+
+        if (num_len != param_len) {
+            SCPI_ErrorPush(context, SCPI_ERROR_SUFFIX_NOT_ALLOWED);
+            return FALSE;
+        }
+
+        *value = i ? TRUE : FALSE;
+    }
+
+    return TRUE;
+}
+
+
+/**
+ * Parse choice parameter
+ * @param context
+ * @param options
+ * @param value
+ * @param mandatory
+ * @return 
+ */
+#if 0
+boolean SCPI_ParamChoice(scpi_t * context, const char * options[], INT32 * value, boolean mandatory) {
+    const char * param;
+    UINT32 param_len;
+    UINT32 res;
+
+    if (!options || !value) {
+        return FALSE;
+    }
+
+    if (!SCPI_ParamString(context, &param, &param_len, mandatory)) {
+        return FALSE;
+    }
+
+    for (res = 0; options[res]; ++res) {
+        if (matchPattern(options[res], strlen(options[res]), param, param_len)) {
+            *value = res;
+            return TRUE;
+        }
+    }
+
+    SCPI_ErrorPush(context, SCPI_ERROR_ILLEGAL_PARAMETER_VALUE);
+    return FALSE;
+}
+#endif

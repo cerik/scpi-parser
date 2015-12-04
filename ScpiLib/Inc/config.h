@@ -26,38 +26,68 @@
  */
 
 /**
- * @file   scpi_minimal.h
- * @date   Thu Nov 15 10:58:45 UTC 2012
+ * @file   config.h
+ * @date   Wed Mar 20 12:21:26 UTC 2013
  * 
- * @brief  SCPI minimal implementation
+ * @brief  SCPI Configuration
  * 
  * 
  */
 
-#ifndef SCPI_MINIMAL_H
-#define	SCPI_MINIMAL_H
+#ifndef __SCPI_CONFIG_H_
+#define __SCPI_CONFIG_H_
 
-#include "scpi/types.h"
-
-#ifdef	__cplusplus
+#ifdef  __cplusplus
 extern "C" {
 #endif
 
-    scpi_result_t SCPI_Stub(scpi_t * context);
-    scpi_result_t SCPI_StubQ(scpi_t * context);
+/* Compiler specific */
+/* 8bit PIC - PIC16, etc */
+#if defined(_MPC_)
+#define HAVE_STRNLEN            0
+#define HAVE_STRNCASECMP        0
+#define HAVE_STRNICMP           1
+#endif
 
-    scpi_result_t SCPI_SystemVersionQ(scpi_t * context);
-    scpi_result_t SCPI_SystemErrorNextQ(scpi_t * context);
-    scpi_result_t SCPI_SystemErrorCountQ(scpi_t * context);
-    scpi_result_t SCPI_StatusQuestionableEventQ(scpi_t * context);
-    scpi_result_t SCPI_StatusQuestionableEnableQ(scpi_t * context);
-    scpi_result_t SCPI_StatusQuestionableEnable(scpi_t * context);
-    scpi_result_t SCPI_StatusPreset(scpi_t * context);
+/* PIC24 */
+#if defined(__C30__)
+#define HAVE_STRNLEN            0
+#define HAVE_STRNCASECMP        0
+#define HAVE_STRNICMP           0
+#endif
 
+/* PIC32mx */
+#if defined(__C32__)
+#define HAVE_STRNLEN            0
+#define HAVE_STRNCASECMP        1
+#define HAVE_STRNICMP           0
+#endif
 
-#ifdef	__cplusplus
+/* ======== test strnlen ======== */
+#ifndef HAVE_STRNLEN
+#define HAVE_STRNLEN            1
+#endif
+/* ======== test strncasecmp ======== */
+#ifndef HAVE_STRNCASECMP
+#define HAVE_STRNCASECMP        1
+#endif
+
+/* define local macros depending on existance of strnlen */
+#if HAVE_STRNLEN
+#define SCPI_strnlen(s, l)  strnlen((s), (l))
+#else
+#define SCPI_strnlen(s, l)  BSD_strnlen((s), (l))
+#endif
+
+/* define local macros depending on existance of strncasecmp */
+#if HAVE_STRNCASECMP
+#define SCPI_strncasecmp(s1, s2, l) strncasecmp((s1), (s2), (l))
+#else
+#define SCPI_strncasecmp(s1, s2, l) strcasecmp((s1), (s2))
+#endif
+
+#ifdef  __cplusplus
 }
 #endif
 
-#endif	/* SCPI_MINIMAL_H */
-
+#endif

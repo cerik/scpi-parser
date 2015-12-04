@@ -2,7 +2,7 @@
  * Copyright (c) 2012-2013 Jan Breuer,
  *
  * All Rights Reserved
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
  * met:
@@ -11,7 +11,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -26,25 +26,43 @@
  */
 
 /**
- * @file   scpi.h
+ * @file   scpi_error.h
  * @date   Thu Nov 15 10:58:45 UTC 2012
- * 
- * @brief  SCPI library include file
- * 
- * 
+ *
+ * @brief  Error handling and storing routines
+ *
+ *
  */
 
-#ifndef SCPI_H
-#define	SCPI_H
+#ifndef SCPI_ERROR_H
+#define SCPI_ERROR_H
 
-#include "scpi/parser.h"
-#include "scpi/ieee488.h"
-#include "scpi/error.h"
-#include "scpi/constants.h"
-#include "scpi/minimal.h"
-#include "scpi/units.h"
+#include "types.h"
 
+#ifdef	__cplusplus
+extern "C" {
+#endif
 
+    void SCPI_ErrorInit(scpi_t * context);
+    void SCPI_ErrorClear(scpi_t * context);
+    INT16 SCPI_ErrorPop(scpi_t * context);
+    void SCPI_ErrorPush(scpi_t * context, INT16 err);
+    INT32 SCPI_ErrorCount(scpi_t * context);
+    const char * SCPI_ErrorTranslate(INT16 err);
 
-#endif	/* SCPI_H */
+#define SCPI_ERROR_SYNTAX                   -102
+#define SCPI_ERROR_INVALID_SEPARATOR        -103
+#define SCPI_ERROR_UNDEFINED_HEADER         -113
+#define SCPI_ERROR_PARAMETER_NOT_ALLOWED    -108
+#define SCPI_ERROR_MISSING_PARAMETER        -109
+#define SCPI_ERROR_INVALID_SUFFIX           -131
+#define SCPI_ERROR_SUFFIX_NOT_ALLOWED       -138
+
+#define SCPI_ERROR_EXECUTION_ERROR          -200
+    
+#ifdef	__cplusplus
+}
+#endif
+
+#endif	/* SCPI_ERROR_H */
 

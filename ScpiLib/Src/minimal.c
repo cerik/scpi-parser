@@ -33,13 +33,11 @@
  * 
  * 
  */
-
-
-#include "scpi/parser.h"
-#include "scpi/minimal.h"
-#include "scpi/constants.h"
-#include "scpi/error.h"
-#include "scpi/ieee488.h"
+#include "parser.h"
+#include "minimal.h"
+#include "constants.h"
+#include "error.h"
+#include "ieee488.h"
 
 /**
  * Command stub function
@@ -77,7 +75,7 @@ scpi_result_t SCPI_SystemVersionQ(scpi_t * context) {
  * @return 
  */
 scpi_result_t SCPI_SystemErrorNextQ(scpi_t * context) {
-    int16_t err = SCPI_ErrorPop(context);
+    INT16 err = SCPI_ErrorPop(context);
 
     SCPI_ResultInt(context, err);
     SCPI_ResultText(context, SCPI_ErrorTranslate(err));
@@ -102,10 +100,10 @@ scpi_result_t SCPI_SystemErrorCountQ(scpi_t * context) {
  * @return 
  */
 scpi_result_t SCPI_StatusQuestionableEventQ(scpi_t * context) {
-    // return value
+    /* return value */
     SCPI_ResultInt(context, SCPI_RegGet(context, SCPI_REG_QUES));
 
-    // clear register
+    /* clear register */
     SCPI_RegSet(context, SCPI_REG_QUES, 0);
 
     return SCPI_RES_OK;
@@ -117,7 +115,7 @@ scpi_result_t SCPI_StatusQuestionableEventQ(scpi_t * context) {
  * @return 
  */
 scpi_result_t SCPI_StatusQuestionableEnableQ(scpi_t * context) {
-    // return value
+    /* return value */
     SCPI_ResultInt(context, SCPI_RegGet(context, SCPI_REG_QUESE));
 
     return SCPI_RES_OK;
@@ -129,7 +127,7 @@ scpi_result_t SCPI_StatusQuestionableEnableQ(scpi_t * context) {
  * @return 
  */
 scpi_result_t SCPI_StatusQuestionableEnable(scpi_t * context) {
-    int32_t new_QUESE;
+    INT32 new_QUESE;
     if (SCPI_ParamInt(context, &new_QUESE, TRUE)) {
         SCPI_RegSet(context, SCPI_REG_QUESE, new_QUESE);
     }
@@ -142,7 +140,7 @@ scpi_result_t SCPI_StatusQuestionableEnable(scpi_t * context) {
  * @return 
  */
 scpi_result_t SCPI_StatusPreset(scpi_t * context) {
-    // clear STATUS:...
+    /* clear STATUS:... */
     SCPI_RegSet(context, SCPI_REG_QUES, 0);
     return SCPI_RES_OK;
 }

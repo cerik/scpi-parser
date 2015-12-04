@@ -26,42 +26,38 @@
  */
 
 /**
- * @file   scpi_fifo.h
+ * @file   scpi_minimal.h
  * @date   Thu Nov 15 10:58:45 UTC 2012
  * 
- * @brief  basic FIFO implementation
+ * @brief  SCPI minimal implementation
  * 
  * 
  */
 
-#ifndef SCPI_FIFO_H
-#define	SCPI_FIFO_H
+#ifndef SCPI_MINIMAL_H
+#define	SCPI_MINIMAL_H
 
-#include "scpi/types.h"
+#include "types.h"
 
 #ifdef	__cplusplus
 extern "C" {
 #endif
 
+    scpi_result_t SCPI_Stub(scpi_t * context);
+    scpi_result_t SCPI_StubQ(scpi_t * context);
 
-#define FIFO_SIZE 100
+    scpi_result_t SCPI_SystemVersionQ(scpi_t * context);
+    scpi_result_t SCPI_SystemErrorNextQ(scpi_t * context);
+    scpi_result_t SCPI_SystemErrorCountQ(scpi_t * context);
+    scpi_result_t SCPI_StatusQuestionableEventQ(scpi_t * context);
+    scpi_result_t SCPI_StatusQuestionableEnableQ(scpi_t * context);
+    scpi_result_t SCPI_StatusQuestionableEnable(scpi_t * context);
+    scpi_result_t SCPI_StatusPreset(scpi_t * context);
 
-    struct _fifo_t {
-        int16_t wr;
-        int16_t rd;
-        int16_t size;
-        int16_t data[FIFO_SIZE];
-    };
-    typedef struct _fifo_t fifo_t;
-
-    void fifo_init(fifo_t * fifo);
-    void fifo_clear(fifo_t * fifo);
-    bool_t fifo_push(fifo_t * fifo, int16_t value);
-    bool_t fifo_pop(fifo_t * fifo, int16_t * value);
-    bool_t fifo_count(fifo_t * fifo, int16_t * value);
 
 #ifdef	__cplusplus
 }
 #endif
 
-#endif	/* SCPI_FIFO_H */
+#endif	/* SCPI_MINIMAL_H */
+

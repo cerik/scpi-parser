@@ -34,17 +34,35 @@
  * 
  */
 
-#include "scpi/parser.h"
-#include "scpi/ieee488.h"
-#include "scpi/error.h"
-#include "scpi/constants.h"
+#include "parser.h"
+#include "ieee488.h"
+#include "error.h"
+#include "constants.h"
+
+#include <stdio.h>
 
 /**
  * Update register value
+ * @param context
  * @param name - register name
  */
-static void SCPI_RegUpdate(scpi_t * context, scpi_reg_name_t name) {
+static void regUpdate(scpi_t * context, scpi_reg_name_t name) {
     SCPI_RegSet(context, name, SCPI_RegGet(context, name));
+}
+
+/**
+ * Update STB register according to value and its mask register
+ * @param context
+ * @param val value of register
+ * @param mask name of mask register (enable register)
+ * @param stbBits bits to clear or set in STB
+ */
+static void regUpdateSTB(scpi_t * context, scpi_reg_val_t val, scpi_reg_name_t mask, scpi_reg_val_t stbBits) {
+    if (val & SCPI_RegGet(context, mask)) {
+        SCPI_RegSetBits(context, SCPI_REG_STB, stbBits);
+    } else {
+        SCPI_RegClearBits(context, SCPI_REG_STB, stbBits);
+    }
 }
 
 /**
@@ -61,12 +79,26 @@ scpi_reg_val_t SCPI_RegGet(scpi_t * context, scpi_reg_name_t name) {
 }
 
 /**
+ * Wrapper function to control interface from context
+ * @param context
+ * @param ctrl number of controll message
+ * @param value value of related register
+ */
+static size_t writeControl(scpi_t * context, scpi_ctrl_name_t ctrl, scpi_reg_val_t val) {
+    if (context && context->interface && context->interface->control) {
+        return context->interface->control(context, ctrl, val);
+    } else {
+        return 0;
+    }
+}
+
+/**
  * Set register value
  * @param name - register name
  * @param val - new value
  */
 void SCPI_RegSet(scpi_t * context, scpi_reg_name_t name, scpi_reg_val_t val) {
-    bool_t srq = FALSE;
+    boolean srq = FALSE;
     scpi_reg_val_t mask;
 
     if ((name >= SCPI_REG_COUNT) || (context->registers == NULL)) {
@@ -74,9 +106,10 @@ void SCPI_RegSet(scpi_t * context, scpi_reg_name_t name, scpi_reg_val_t val) {
     }
     
 
-    // set register value
+    /* set register value */
     context->registers[name] = val;
 
+    /** @TODO: remove recutsion */
     switch (name) {
         case SCPI_REG_STB:
             mask = SCPI_RegGet(context, SCPI_REG_SRE);
@@ -89,50 +122,38 @@ void SCPI_RegSet(scpi_t * context, scpi_reg_name_t name, scpi_reg_val_t val) {
             }
             break;
         case SCPI_REG_SRE:
-            SCPI_RegUpdate(context, SCPI_REG_STB);
+            regUpdate(context, SCPI_REG_STB);
             break;
         case SCPI_REG_ESR:
-            if (val & SCPI_RegGet(context, SCPI_REG_ESE)) {
-                SCPI_RegSetBits(context, SCPI_REG_STB, STB_ESR);
-            } else {
-                SCPI_RegClearBits(context, SCPI_REG_STB, STB_ESR);
-            }
+            regUpdateSTB(context, val, SCPI_REG_ESE, STB_ESR);
             break;
         case SCPI_REG_ESE:
-            SCPI_RegUpdate(context, SCPI_REG_ESR);
+            regUpdate(context, SCPI_REG_ESR);
             break;
         case SCPI_REG_QUES:
-            if (val & SCPI_RegGet(context, SCPI_REG_QUESE)) {
-                SCPI_RegSetBits(context, SCPI_REG_STB, STB_QES);
-            } else {
-                SCPI_RegClearBits(context, SCPI_REG_STB, STB_QES);
-            }
+            regUpdateSTB(context, val, SCPI_REG_QUESE, STB_QES);
             break;
         case SCPI_REG_QUESE:
-            SCPI_RegUpdate(context, SCPI_REG_QUES);
+            regUpdate(context, SCPI_REG_QUES);
             break;
         case SCPI_REG_OPER:
-            if (val & SCPI_RegGet(context, SCPI_REG_OPERE)) {
-                SCPI_RegSetBits(context, SCPI_REG_STB, STB_OPS);
-            } else {
-                SCPI_RegClearBits(context, SCPI_REG_STB, STB_OPS);
-            }
+            regUpdateSTB(context, val, SCPI_REG_OPERE, STB_OPS);
             break;
         case SCPI_REG_OPERE:
-            SCPI_RegUpdate(context, SCPI_REG_OPER);
+            regUpdate(context, SCPI_REG_OPER);
             break;
             
             
         case SCPI_REG_COUNT:
-            // nothing to do
+            /* nothing to do */
             break;
     }
 
-    // set updated register value
+    /* set updated register value */
     context->registers[name] = val;
 
-    if (srq && context->interface && context->interface->srq) {
-        context->interface->srq(context);
+    if (srq) {
+        writeControl(context, SCPI_CTRL_SRQ, SCPI_RegGet(context, SCPI_REG_STB));
     }
 }
 
@@ -154,10 +175,12 @@ void SCPI_RegClearBits(scpi_t * context, scpi_reg_name_t name, scpi_reg_val_t bi
     SCPI_RegSet(context, name, SCPI_RegGet(context, name) & ~bits);
 }
 
-/* ============ */
-
+/**
+ * Clear event register
+ * @param context
+ */
 void SCPI_EventClear(scpi_t * context) {
-    // TODO
+    /* TODO */
     SCPI_RegSet(context, SCPI_REG_ESR, 0);
 }
 
@@ -181,7 +204,7 @@ scpi_result_t SCPI_CoreCls(scpi_t * context) {
  * @return 
  */
 scpi_result_t SCPI_CoreEse(scpi_t * context) {
-    int32_t new_ESE;
+    INT32 new_ESE;
     if (SCPI_ParamInt(context, &new_ESE, TRUE)) {
         SCPI_RegSet(context, SCPI_REG_ESE, new_ESE);
     }
@@ -211,6 +234,12 @@ scpi_result_t SCPI_CoreEsrQ(scpi_t * context) {
 
 /**
  * *IDN?
+ * 
+ * field1: MANUFACTURE
+ * field2: MODEL
+ * field4: SUBSYSTEMS REVISIONS
+ * 
+ * example: MANUFACTURE,MODEL,0,01-02-01
  * @param context
  * @return 
  */
@@ -237,7 +266,7 @@ scpi_result_t SCPI_CoreOpc(scpi_t * context) {
  * @return 
  */
 scpi_result_t SCPI_CoreOpcQ(scpi_t * context) {
-    // Operation is always completed
+    /* Operation is always completed */
     SCPI_ResultInt(context, 1);
     return SCPI_RES_OK;
 }
@@ -260,7 +289,7 @@ scpi_result_t SCPI_CoreRst(scpi_t * context) {
  * @return 
  */
 scpi_result_t SCPI_CoreSre(scpi_t * context) {
-    int32_t new_SRE;
+    INT32 new_SRE;
     if (SCPI_ParamInt(context, &new_SRE, TRUE)) {
         SCPI_RegSet(context, SCPI_REG_SRE, new_SRE);
     }
@@ -296,7 +325,7 @@ scpi_result_t SCPI_CoreTstQ(scpi_t * context) {
     int result = 0;
     if (context && context->interface && context->interface->test) {
         result = context->interface->test(context);
-    }    
+    }
     SCPI_ResultInt(context, result);
     return SCPI_RES_OK;
 }
@@ -308,7 +337,6 @@ scpi_result_t SCPI_CoreTstQ(scpi_t * context) {
  */
 scpi_result_t SCPI_CoreWai(scpi_t * context) {
     (void) context;
-    // NOP
+    /* NOP */
     return SCPI_RES_OK;
 }
-

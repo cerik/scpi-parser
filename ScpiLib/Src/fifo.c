@@ -1,5 +1,5 @@
 
-#include "scpi/fifo.h"
+#include "fifo.h"
 
 void fifo_init(fifo_t * fifo) {
     fifo->wr = 0;
@@ -12,10 +12,10 @@ void fifo_clear(fifo_t * fifo) {
     fifo->rd = 0;
 }
 
-bool_t fifo_push(fifo_t * fifo, int16_t value) {
+boolean fifo_add(fifo_t * fifo, INT16 value) {
     /* FIFO full? */
     if (fifo->wr == ((fifo->rd + fifo->size) % (fifo->size + 1))) {
-        return FALSE;
+        fifo_remove(fifo, NULL);
     }
 
     fifo->data[fifo->wr] = value;
@@ -24,20 +24,22 @@ bool_t fifo_push(fifo_t * fifo, int16_t value) {
     return TRUE;
 }
 
-bool_t fifo_pop(fifo_t * fifo, int16_t * value) {
+boolean fifo_remove(fifo_t * fifo, INT16 * value) {
     /* FIFO empty? */
     if (fifo->wr == fifo->rd) {
         return FALSE;
     }
 
-    *value = fifo->data[fifo->rd];
+    if(value) {
+        *value = fifo->data[fifo->rd];
+    }
 
     fifo->rd = (fifo->rd + 1) % (fifo->size + 1);
 
     return TRUE;
 }
 
-bool_t fifo_count(fifo_t * fifo, int16_t * value) {
+boolean fifo_count(fifo_t * fifo, INT16 * value) {
     *value = fifo->wr - fifo->rd;
     if (*value < 0) {
         *value += (fifo->size + 1);

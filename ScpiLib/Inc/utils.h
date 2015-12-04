@@ -37,27 +37,53 @@
 #ifndef SCPI_UTILS_H
 #define	SCPI_UTILS_H
 
-#include <stdint.h>
-#include "scpi/types.h"
+#include "config.h"
+#include "types.h"
 
-#ifdef	__cplusplus
+#ifdef  __cplusplus
 extern "C" {
 #endif
 
+#if defined(__GNUC__) && (__GNUC__ >= 4)
     #define LOCAL __attribute__((visibility ("hidden")))
+#else
+    #define LOCAL
+#endif
 
-    char * strnpbrk(const char *str, size_t size, const char *set) LOCAL;
-    bool_t compareStr(const char * str1, size_t len1, const char * str2, size_t len2) LOCAL;
-    size_t longToStr(int32_t val, char * str, size_t len) LOCAL;
-    size_t doubleToStr(double val, char * str, size_t len) LOCAL;
-    size_t strToLong(const char * str, int32_t * val) LOCAL;
-    size_t strToDouble(const char * str, double * val) LOCAL;
-    bool_t locateText(const char * str1, size_t len1, char ** str2, size_t * len2) LOCAL;
-    bool_t locateStr(const char * str1, size_t len1, char ** str2, size_t * len2) LOCAL;
-    size_t skipWhitespace(const char * cmd, size_t len) LOCAL;
-    bool_t matchPattern(const char * pattern, size_t pattern_len, const char * str, size_t str_len) LOCAL;
+#ifdef _MSC_VER
+	int strcasecmp(const char *s1,const char *s2);
+	int strncasecmp(const char *s1,const char *s2, int n);
+#endif
 
+    const char * strnpbrk(const char *str, UINT32 size, const char *set) LOCAL;
+    boolean compareStr(const char * str1, UINT32 len1, const char * str2, UINT32 len2) LOCAL;
+    UINT32  longToStr(INT32 val, char * str, UINT32 len) LOCAL;
+    UINT32  doubleToStr(double val, char * str, UINT32 len) LOCAL;
+    UINT32  strToLong(const char * str, INT32 * val) LOCAL;
+    UINT32  strToDouble(const char * str, double * val) LOCAL;
+    boolean locateText(const char * str1, UINT32 len1, const char ** str2, UINT32 * len2) LOCAL;
+    boolean locateStr(const char * str1, UINT32 len1, const char ** str2, UINT32 * len2) LOCAL;
+    UINT32  skipWhitespace(const char * cmd, UINT32 len) LOCAL;
+    UINT32  skipColon(const char * cmd, UINT32 len) LOCAL;
+    boolean matchPattern(const char * pattern, UINT32 pattern_len, const char * str, UINT32 str_len) LOCAL;
+    boolean matchCommand(const char * pattern, const char * cmd, UINT32 len) LOCAL;
+    boolean composeCompoundCommand(char * ptr_prev, UINT32 len_prev, char ** pptr, UINT32 * plen);
+    UINT8   char2hex(UINT8 ch) ;
+    
+#if !HAVE_STRNLEN
+    UINT32  BSD_strnlen(const char *s, UINT32 maxlen);
+#else
+    UINT32 strnlen(const char *s, UINT32 max);
+#endif
 
+#if !HAVE_STRNCASECMP && !HAVE_STRNICMP
+    int OUR_strncasecmp(const char *s1, const char *s2, UINT32 n);
+#endif
+
+#define min(a, b)  (((a) < (b)) ? (a) : (b))
+#define max(a, b)  (((a) > (b)) ? (a) : (b))
+
+#if 0
 #define max(a,b) \
    ({ __typeof__ (a) _a = (a); \
        __typeof__ (b) _b = (b); \
@@ -67,6 +93,8 @@ extern "C" {
    ({ __typeof__ (a) _a = (a); \
        __typeof__ (b) _b = (b); \
      _a < _b ? _a : _b; })
+
+#endif
 
 #ifdef	__cplusplus
 }
