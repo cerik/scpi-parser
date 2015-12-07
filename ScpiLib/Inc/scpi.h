@@ -35,7 +35,7 @@
  */
 
 #ifndef SCPI_H
-#define SCPI_H
+#define	SCPI_H
 
 #include "parser.h"
 #include "ieee488.h"
@@ -43,8 +43,8 @@
 #include "constants.h"
 #include "minimal.h"
 #include "units.h"
-
-
+#include "utils.h"
+#include "expression.h"
 
 #endif	/* SCPI_H */
 

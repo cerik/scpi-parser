@@ -37,10 +37,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "scpi/scpi.h"
-#include "../common/scpi-def.h"
 
-size_t SCPI_Write(scpi_t * context, const char * data, size_t len) {
+#include "scpi.h"
+#include "scpi-def.h"
+
+UINT32 SCPI_Write(scpi_t * context, const char * data, UINT32 len) {
     (void) context;
     return fwrite(data, 1, len, stdout);
 }
@@ -49,10 +50,10 @@ scpi_result_t SCPI_Flush(scpi_t * context) {
     return SCPI_RES_OK;
 }
 
-int SCPI_Error(scpi_t * context, int_fast16_t err) {
+int SCPI_Error(scpi_t * context, INT16 err) {
     (void) context;
 
-    fprintf(stderr, "**ERROR: %d, \"%s\"\r\n", (int16_t) err, SCPI_ErrorTranslate(err));
+    fprintf(stderr, "**ERROR: %d, \"%s\"\r\n", (INT16) err, SCPI_ErrorTranslate(err));
     return 0;
 }
 
@@ -74,27 +75,29 @@ scpi_result_t SCPI_SystemCommTcpipControlQ(scpi_t * context) {
     return SCPI_RES_ERR;
 }
 
+char gTstCmd0[]={"CONFigure:MATrix 1,2,2,12.37;CONF:MATrix? 1,2,2;CONFigure:MATrix 3,1,2,56.537;CONF:MAT? 3,1,2\r"};
+char gTstCmd1[]={"CONFigure:MATrix 1,2,2,1.2;MAT? 1,2,2;MAT 1,2,2,2.1;MAT? 1,2,2\r"};
+char gTstCmd2[]={"TEST:BOOL 1\r"};
 /*
  * 
  */
-int main(int argc, char** argv) {
-    (void) argc;
-    (void) argv;
+int main(int argc, char** argv) 
+{
     int result;
-
+    char smbuffer[100];
+    
     SCPI_Init(&scpi_context);
-
-    //printf("%.*s %s\r\n",  3, "asdadasdasdasdas", "b");
     printf("SCPI Interactive demo\r\n");
-    char smbuffer[10];
-    while (1) {
-        if (NULL == fgets(smbuffer, 10, stdin)) {
+    while (1) 
+    {
+        if (NULL == fgets(smbuffer, 10, stdin)) 
+        {
             break;
         }
         SCPI_Input(&scpi_context, smbuffer, strlen(smbuffer));
     }
+    getchar();
 
-
-    return (EXIT_SUCCESS);
+    return EXIT_SUCCESS;
 }
 

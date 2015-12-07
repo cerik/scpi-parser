@@ -9,22 +9,22 @@
 #include <stdlib.h>
 #include "CUnit/Basic.h"
 
-#include "scpi/fifo.h"
+#include "../src/fifo_private.h"
 
 /*
  * CUnit Test Suite
  */
 
-int init_suite(void) {
+static int init_suite(void) {
     return 0;
 }
 
-int clean_suite(void) {
+static int clean_suite(void) {
     return 0;
 }
 
-void testFifo() {
-    fifo_t fifo;
+static void testFifo() {
+    scpi_fifo_t fifo;
     fifo_init(&fifo);
     int16_t value;
 
@@ -76,12 +76,13 @@ void testFifo() {
     CU_ASSERT_TRUE(fifo_remove(&fifo, &value));
     CU_ASSERT_EQUAL(value, 5);
     TEST_FIFO_COUNT(0);
-    
+
     CU_ASSERT_FALSE(fifo_remove(&fifo, &value));
     TEST_FIFO_COUNT(0);
 }
 
 int main() {
+    unsigned int result;
     CU_pSuite pSuite = NULL;
 
     /* Initialize the CUnit test registry */
@@ -104,6 +105,7 @@ int main() {
     /* Run all tests using the CUnit Basic interface */
     CU_basic_set_mode(CU_BRM_VERBOSE);
     CU_basic_run_tests();
+    result = CU_get_number_of_tests_failed();
     CU_cleanup_registry();
-    return CU_get_error();
+    return result ? result : CU_get_error();
 }

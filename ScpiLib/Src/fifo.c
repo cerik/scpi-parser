@@ -1,18 +1,32 @@
 
-#include "fifo.h"
+#include "fifo_private.h"
 
-void fifo_init(fifo_t * fifo) {
+/**
+ * Initialize fifo
+ * @param fifo
+ */
+void fifo_init(scpi_fifo_t * fifo) {
     fifo->wr = 0;
     fifo->rd = 0;
     fifo->size = FIFO_SIZE;
 }
 
-void fifo_clear(fifo_t * fifo) {
+/**
+ * Empty fifo
+ * @param fifo
+ */
+void fifo_clear(scpi_fifo_t * fifo) {
     fifo->wr = 0;
     fifo->rd = 0;
 }
 
-boolean fifo_add(fifo_t * fifo, INT16 value) {
+/**
+ * Add element to fifo. If fifo is full, remove last element.
+ * @param fifo
+ * @param value
+ * @return 
+ */
+scpi_bool_t fifo_add(scpi_fifo_t * fifo, INT16 value) {
     /* FIFO full? */
     if (fifo->wr == ((fifo->rd + fifo->size) % (fifo->size + 1))) {
         fifo_remove(fifo, NULL);
@@ -24,13 +38,19 @@ boolean fifo_add(fifo_t * fifo, INT16 value) {
     return TRUE;
 }
 
-boolean fifo_remove(fifo_t * fifo, INT16 * value) {
+/**
+ * Remove element form fifo
+ * @param fifo
+ * @param value
+ * @return FALSE - fifo is empty
+ */
+scpi_bool_t fifo_remove(scpi_fifo_t * fifo, INT16 * value) {
     /* FIFO empty? */
     if (fifo->wr == fifo->rd) {
         return FALSE;
     }
 
-    if(value) {
+    if (value) {
         *value = fifo->data[fifo->rd];
     }
 
@@ -39,7 +59,13 @@ boolean fifo_remove(fifo_t * fifo, INT16 * value) {
     return TRUE;
 }
 
-boolean fifo_count(fifo_t * fifo, INT16 * value) {
+/**
+ * Retrive number of elements in fifo
+ * @param fifo
+ * @param value
+ * @return 
+ */
+scpi_bool_t fifo_count(scpi_fifo_t * fifo, INT16 * value) {
     *value = fifo->wr - fifo->rd;
     if (*value < 0) {
         *value += (fifo->size + 1);

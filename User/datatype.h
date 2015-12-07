@@ -9,7 +9,7 @@
 #define _DATATYPES_H_
 
 #ifndef __FUNCTION__
-    #define __FUNCTION__ __FILE__
+#define __FUNCTION__  __FILE__
 #endif
 
 #ifdef	__cplusplus
@@ -49,10 +49,10 @@ typedef struct{
 * Macro Name     : assert_param
 * Description    : The assert_param macro is used for function's parameters check.
 *                  It is used only if the library is compiled in DEBUG mode. 
-* Input          : - expr: If expr is false, it calls assert_failed function
+* Input          : - expr: If expr is FALSE, it calls assert_failed function
 *                    which reports the name of the source file and the source
 *                    line number of the call that failed. 
-*                    If expr is true, it returns no value.
+*                    If expr is TRUE, it returns no value.
 * Return         : None
 *******************************************************************************/ 
 #define assert_param(expr) ((expr) ? (void)0 : assert_failed((UINT8 *)__FILE__, __LINE__))

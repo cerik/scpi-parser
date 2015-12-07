@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2012-2015 Jan Breuer,
+ * Copyright (c) 2012-2013 Jan Breuer,
  *
  * All Rights Reserved
  * 
@@ -26,37 +26,43 @@
  */
 
 /**
- * @file   utils.h
+ * @file   scpi_fifo.h
+ * @date   Thu Nov 15 10:58:45 UTC 2012
  * 
- * @brief  Conversion routines and string manipulation routines
+ * @brief  basic FIFO implementation
  * 
  * 
  */
 
-#ifndef SCPI_UTILS_H
-#define	SCPI_UTILS_H
+#ifndef SCPI_FIFO_H
+#define	SCPI_FIFO_H
 
-//#include <stdint.h>
 #include "types.h"
+#include "utils_private.h"
 
 #ifdef	__cplusplus
 extern "C" {
 #endif
 
-    UINT32 SCPI_UInt32ToStrBase(UINT32 val, char * str, UINT32 len, INT8 base);
-    UINT32 SCPI_Int32ToStr(INT32 val, char * str, UINT32 len);
-    UINT32 SCPI_UInt64ToStrBase(UINT64 val, char * str, UINT32 len, INT8 base);
-    UINT32 SCPI_Int64ToStr(INT64 val, char * str, UINT32 len);
-    UINT32 SCPI_FloatToStr(float val, char * str, UINT32 len);
-    UINT32 SCPI_DoubleToStr(double val, char * str, UINT32 len);
-    UINT32 strnlen(const char *s, UINT32 max);
 
-    // deprecated finction, should be removed later
-#define SCPI_LongToStr(val, str, len, base) SCPI_Int32ToStr((val), (str), (len), (base), TRUE)
+#define FIFO_SIZE 16
+
+    struct _scpi_fifo_t {
+        INT16 wr;
+        INT16 rd;
+        INT16 size;
+        INT16 data[FIFO_SIZE];
+    };
+    typedef struct _scpi_fifo_t scpi_fifo_t;
+
+    void fifo_init(scpi_fifo_t * fifo) LOCAL;
+    void fifo_clear(scpi_fifo_t * fifo) LOCAL;
+    scpi_bool_t fifo_add(scpi_fifo_t * fifo, INT16 value) LOCAL;
+    scpi_bool_t fifo_remove(scpi_fifo_t * fifo, INT16 * value) LOCAL;
+    scpi_bool_t fifo_count(scpi_fifo_t * fifo, INT16 * value) LOCAL;
 
 #ifdef	__cplusplus
 }
 #endif
 
-#endif	/* SCPI_UTILS_H */
-
+#endif	/* SCPI_FIFO_H */

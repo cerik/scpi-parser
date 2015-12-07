@@ -64,7 +64,7 @@ LINK32=link.exe
 # PROP Intermediate_Dir "Debug"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
-# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /I "ScpiLib/Inc" /I "User" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /FR /YX /FD /GZ /c
+# ADD CPP /nologo /W3 /Gm /GX /ZI /Od /I "ScpiLib/Inc" /I "User" /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /YX /FD /GZ /c
 # ADD BASE RSC /l 0x804 /d "_DEBUG"
 # ADD RSC /l 0x804 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -82,10 +82,10 @@ LINK32=link.exe
 # Name "ScpiPrj - Win32 Debug"
 # Begin Group "ScpiLib"
 
-# PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
+# PROP Default_Filter ""
 # Begin Group "ScpiInc"
 
-# PROP Default_Filter "h;hpp"
+# PROP Default_Filter "h"
 # Begin Source File
 
 SOURCE=.\ScpiLib\Inc\config.h
@@ -96,19 +96,23 @@ SOURCE=.\ScpiLib\Inc\constants.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\ScpiLib\Inc\debug.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\ScpiLib\Inc\error.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\ScpiLib\Inc\fifo.h
+SOURCE=.\ScpiLib\Inc\expression.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ScpiLib\Inc\fifo_private.h
 # End Source File
 # Begin Source File
 
 SOURCE=.\ScpiLib\Inc\ieee488.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ScpiLib\Inc\lexer_private.h
 # End Source File
 # Begin Source File
 
@@ -117,6 +121,10 @@ SOURCE=.\ScpiLib\Inc\minimal.h
 # Begin Source File
 
 SOURCE=.\ScpiLib\Inc\parser.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\ScpiLib\Inc\parser_private.h
 # End Source File
 # Begin Source File
 
@@ -138,17 +146,21 @@ SOURCE=.\ScpiLib\Inc\units.h
 
 SOURCE=.\ScpiLib\Inc\utils.h
 # End Source File
+# Begin Source File
+
+SOURCE=.\ScpiLib\Inc\utils_private.h
+# End Source File
 # End Group
 # Begin Group "ScpiSrc"
 
-# PROP Default_Filter "c;cpp"
-# Begin Source File
-
-SOURCE=.\ScpiLib\Src\debug.c
-# End Source File
+# PROP Default_Filter "c"
 # Begin Source File
 
 SOURCE=.\ScpiLib\Src\error.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\ScpiLib\Src\expression.c
 # End Source File
 # Begin Source File
 
@@ -157,6 +169,10 @@ SOURCE=.\ScpiLib\Src\fifo.c
 # Begin Source File
 
 SOURCE=.\ScpiLib\Src\ieee488.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\ScpiLib\Src\lexer.c
 # End Source File
 # Begin Source File
 
@@ -182,7 +198,7 @@ SOURCE=.\ScpiLib\Src\utils.c
 # End Group
 # Begin Group "User"
 
-# PROP Default_Filter "h;hpp;hxx;hm;inl"
+# PROP Default_Filter ""
 # Begin Group "UserInc"
 
 # PROP Default_Filter "h"
@@ -192,7 +208,7 @@ SOURCE=.\User\datatype.h
 # End Source File
 # Begin Source File
 
-SOURCE=".\User\scpi-interface.h"
+SOURCE=".\User\scpi-def.h"
 # End Source File
 # End Group
 # Begin Group "UserSrc"
@@ -200,11 +216,11 @@ SOURCE=".\User\scpi-interface.h"
 # PROP Default_Filter "c"
 # Begin Source File
 
-SOURCE=".\User\scip-def.c"
+SOURCE=.\User\main.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\User\ScpiTest.c
+SOURCE=".\User\scpi-def.c"
 # End Source File
 # End Group
 # End Group

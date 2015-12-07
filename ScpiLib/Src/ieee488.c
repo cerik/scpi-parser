@@ -84,7 +84,7 @@ scpi_reg_val_t SCPI_RegGet(scpi_t * context, scpi_reg_name_t name) {
  * @param ctrl number of controll message
  * @param value value of related register
  */
-static size_t writeControl(scpi_t * context, scpi_ctrl_name_t ctrl, scpi_reg_val_t val) {
+static UINT32 writeControl(scpi_t * context, scpi_ctrl_name_t ctrl, scpi_reg_val_t val) {
     if (context && context->interface && context->interface->control) {
         return context->interface->control(context, ctrl, val);
     } else {
@@ -98,13 +98,16 @@ static size_t writeControl(scpi_t * context, scpi_ctrl_name_t ctrl, scpi_reg_val
  * @param val - new value
  */
 void SCPI_RegSet(scpi_t * context, scpi_reg_name_t name, scpi_reg_val_t val) {
-    boolean srq = FALSE;
+    scpi_bool_t srq = FALSE;
     scpi_reg_val_t mask;
+    scpi_reg_val_t old_val;
 
     if ((name >= SCPI_REG_COUNT) || (context->registers == NULL)) {
         return;
     }
-    
+
+    /* store old register value */
+    old_val = context->registers[name];
 
     /* set register value */
     context->registers[name] = val;
@@ -116,7 +119,10 @@ void SCPI_RegSet(scpi_t * context, scpi_reg_name_t name, scpi_reg_val_t val) {
             mask &= ~STB_SRQ;
             if (val & mask) {
                 val |= STB_SRQ;
-                srq = TRUE;
+                /* avoid sending SRQ if nothing has changed */
+                if (old_val != val) {
+                    srq = TRUE;
+                }
             } else {
                 val &= ~STB_SRQ;
             }
@@ -142,8 +148,8 @@ void SCPI_RegSet(scpi_t * context, scpi_reg_name_t name, scpi_reg_val_t val) {
         case SCPI_REG_OPERE:
             regUpdate(context, SCPI_REG_OPER);
             break;
-            
-            
+
+
         case SCPI_REG_COUNT:
             /* nothing to do */
             break;
@@ -205,10 +211,11 @@ scpi_result_t SCPI_CoreCls(scpi_t * context) {
  */
 scpi_result_t SCPI_CoreEse(scpi_t * context) {
     INT32 new_ESE;
-    if (SCPI_ParamInt(context, &new_ESE, TRUE)) {
-        SCPI_RegSet(context, SCPI_REG_ESE, new_ESE);
+    if (SCPI_ParamInt32(context, &new_ESE, TRUE)) {
+        SCPI_RegSet(context, SCPI_REG_ESE, (scpi_reg_val_t) new_ESE);
+        return SCPI_RES_OK;
     }
-    return SCPI_RES_OK;
+    return SCPI_RES_ERR;
 }
 
 /**
@@ -217,7 +224,7 @@ scpi_result_t SCPI_CoreEse(scpi_t * context) {
  * @return 
  */
 scpi_result_t SCPI_CoreEseQ(scpi_t * context) {
-    SCPI_ResultInt(context, SCPI_RegGet(context, SCPI_REG_ESE));
+    SCPI_ResultInt32(context, SCPI_RegGet(context, SCPI_REG_ESE));
     return SCPI_RES_OK;
 }
 
@@ -227,7 +234,7 @@ scpi_result_t SCPI_CoreEseQ(scpi_t * context) {
  * @return 
  */
 scpi_result_t SCPI_CoreEsrQ(scpi_t * context) {
-    SCPI_ResultInt(context, SCPI_RegGet(context, SCPI_REG_ESR));
+    SCPI_ResultInt32(context, SCPI_RegGet(context, SCPI_REG_ESR));
     SCPI_RegSet(context, SCPI_REG_ESR, 0);
     return SCPI_RES_OK;
 }
@@ -244,9 +251,14 @@ scpi_result_t SCPI_CoreEsrQ(scpi_t * context) {
  * @return 
  */
 scpi_result_t SCPI_CoreIdnQ(scpi_t * context) {
-    SCPI_ResultString(context, SCPI_MANUFACTURE);
-    SCPI_ResultString(context, SCPI_DEV_NAME);
-    SCPI_ResultString(context, SCPI_DEV_VERSION);
+    int i;
+    for (i = 0; i < 4; i++) {
+        if (context->idn[i]) {
+            SCPI_ResultMnemonic(context, context->idn[i]);
+        } else {
+            SCPI_ResultMnemonic(context, "0");
+        }
+    }
     return SCPI_RES_OK;
 }
 
@@ -267,7 +279,7 @@ scpi_result_t SCPI_CoreOpc(scpi_t * context) {
  */
 scpi_result_t SCPI_CoreOpcQ(scpi_t * context) {
     /* Operation is always completed */
-    SCPI_ResultInt(context, 1);
+    SCPI_ResultInt32(context, 1);
     return SCPI_RES_OK;
 }
 
@@ -290,10 +302,11 @@ scpi_result_t SCPI_CoreRst(scpi_t * context) {
  */
 scpi_result_t SCPI_CoreSre(scpi_t * context) {
     INT32 new_SRE;
-    if (SCPI_ParamInt(context, &new_SRE, TRUE)) {
-        SCPI_RegSet(context, SCPI_REG_SRE, new_SRE);
+    if (SCPI_ParamInt32(context, &new_SRE, TRUE)) {
+        SCPI_RegSet(context, SCPI_REG_SRE, (scpi_reg_val_t) new_SRE);
+        return SCPI_RES_OK;
     }
-    return SCPI_RES_OK;
+    return SCPI_RES_ERR;
 }
 
 /**
@@ -302,7 +315,7 @@ scpi_result_t SCPI_CoreSre(scpi_t * context) {
  * @return 
  */
 scpi_result_t SCPI_CoreSreQ(scpi_t * context) {
-    SCPI_ResultInt(context, SCPI_RegGet(context, SCPI_REG_SRE));
+    SCPI_ResultInt32(context, SCPI_RegGet(context, SCPI_REG_SRE));
     return SCPI_RES_OK;
 }
 
@@ -312,7 +325,7 @@ scpi_result_t SCPI_CoreSreQ(scpi_t * context) {
  * @return 
  */
 scpi_result_t SCPI_CoreStbQ(scpi_t * context) {
-    SCPI_ResultInt(context, SCPI_RegGet(context, SCPI_REG_STB));
+    SCPI_ResultInt32(context, SCPI_RegGet(context, SCPI_REG_STB));
     return SCPI_RES_OK;
 }
 
@@ -322,11 +335,8 @@ scpi_result_t SCPI_CoreStbQ(scpi_t * context) {
  * @return 
  */
 scpi_result_t SCPI_CoreTstQ(scpi_t * context) {
-    int result = 0;
-    if (context && context->interface && context->interface->test) {
-        result = context->interface->test(context);
-    }
-    SCPI_ResultInt(context, result);
+    (void) context;
+    SCPI_ResultInt32(context, 0);
     return SCPI_RES_OK;
 }
 
@@ -340,3 +350,4 @@ scpi_result_t SCPI_CoreWai(scpi_t * context) {
     /* NOP */
     return SCPI_RES_OK;
 }
+

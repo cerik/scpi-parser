@@ -1,8 +1,8 @@
 /*-
- * Copyright (c) 2012-2013 Jan Breuer,
+ * Copyright (c) 2012-2015 Jan Breuer,
  *
  * All Rights Reserved
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
  * met:
@@ -11,7 +11,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE AUTHORS ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -26,26 +26,36 @@
  */
 
 /**
- * @file   scpi_debug.c
- * @date   Thu Nov 15 10:58:45 UTC 2012
- * 
- * @brief  Debugging SCPI
- * 
- * 
+ * @file   expression.h
+ *
+ * @brief  Expressions handling
+ *
+ *
  */
-#include <stdio.h>
-#include "debug.h"
+#ifndef SCPI_EXPRESSION_H
+#define SCPI_EXPRESSION_H
 
-/**
- * Debug function: show current command and its parameters
- * @param context
- * @return 
- */
-boolean SCPI_DebugCommand(scpi_t * context) {
-    size_t res;
-    printf("**DEBUG: %s (\"", context->paramlist.cmd->pattern);
-    res = fwrite(context->paramlist.parameters, 1, context->paramlist.length, stdout);
-    (void)res;
-        printf("\" - %lu\r\n", (unsigned long)context->paramlist.length);
-    return TRUE;
+#include "config.h"
+#include "types.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+    enum _scpi_expr_result_t {
+        SCPI_EXPR_OK = 0,
+        SCPI_EXPR_ERROR,
+        SCPI_EXPR_NO_MORE,
+    };
+    typedef enum _scpi_expr_result_t scpi_expr_result_t;
+
+    scpi_expr_result_t SCPI_ExprNumericListEntry(scpi_t * context, scpi_parameter_t * param, int index, scpi_bool_t * isRange, scpi_parameter_t * valueFrom, scpi_parameter_t * valueTo);
+    scpi_expr_result_t SCPI_ExprNumericListEntryInt(scpi_t * context, scpi_parameter_t * param, int index, scpi_bool_t * isRange, INT32 * valueFrom, INT32 * valueTo);
+    scpi_expr_result_t SCPI_ExprNumericListEntryDouble(scpi_t * context, scpi_parameter_t * param, int index, scpi_bool_t * isRange, double * valueFrom, double * valueTo);
+    scpi_expr_result_t SCPI_ExprChannelListEntry(scpi_t * context, scpi_parameter_t * param, int index, scpi_bool_t * isRange, INT32 * valuesFrom, INT32 * valuesTo, UINT32 length, UINT32 * dimensions);
+
+#ifdef __cplusplus
 }
+#endif
+
+#endif /* SCPI_EXPRESSION_H */

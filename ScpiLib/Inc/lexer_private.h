@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2012-2015 Jan Breuer,
+ * Copyright (c) 2012-2013 Jan Breuer,
  *
  * All Rights Reserved
  * 
@@ -26,37 +26,43 @@
  */
 
 /**
- * @file   utils.h
+ * @file   lexer.h
+ * @date   Thu Mar 21 15:00:58 UTC 2013
  * 
- * @brief  Conversion routines and string manipulation routines
+ * @brief  SCPI Lexer
  * 
  * 
  */
 
-#ifndef SCPI_UTILS_H
-#define	SCPI_UTILS_H
+#ifndef SCPI_LEXER_H
+#define	SCPI_LEXER_H
 
-//#include <stdint.h>
 #include "types.h"
+#include "utils_private.h"
 
 #ifdef	__cplusplus
 extern "C" {
 #endif
 
-    UINT32 SCPI_UInt32ToStrBase(UINT32 val, char * str, UINT32 len, INT8 base);
-    UINT32 SCPI_Int32ToStr(INT32 val, char * str, UINT32 len);
-    UINT32 SCPI_UInt64ToStrBase(UINT64 val, char * str, UINT32 len, INT8 base);
-    UINT32 SCPI_Int64ToStr(INT64 val, char * str, UINT32 len);
-    UINT32 SCPI_FloatToStr(float val, char * str, UINT32 len);
-    UINT32 SCPI_DoubleToStr(double val, char * str, UINT32 len);
-    UINT32 strnlen(const char *s, UINT32 max);
-
-    // deprecated finction, should be removed later
-#define SCPI_LongToStr(val, str, len, base) SCPI_Int32ToStr((val), (str), (len), (base), TRUE)
+    int scpiLex_IsEos(lex_state_t * state) LOCAL;
+    int scpiLex_WhiteSpace(lex_state_t * state, scpi_token_t * token) LOCAL;
+    int scpiLex_ProgramHeader(lex_state_t * state, scpi_token_t * token) LOCAL;
+    int scpiLex_CharacterProgramData(lex_state_t * state, scpi_token_t * token) LOCAL;
+    int scpiLex_DecimalNumericProgramData(lex_state_t * state, scpi_token_t * token) LOCAL;
+    int scpiLex_SuffixProgramData(lex_state_t * state, scpi_token_t * token) LOCAL;
+    int scpiLex_NondecimalNumericData(lex_state_t * state, scpi_token_t * token) LOCAL;
+    int scpiLex_StringProgramData(lex_state_t * state, scpi_token_t * token) LOCAL;
+    int scpiLex_ArbitraryBlockProgramData(lex_state_t * state, scpi_token_t * token) LOCAL;
+    int scpiLex_ProgramExpression(lex_state_t * state, scpi_token_t * token) LOCAL;
+    int scpiLex_Comma(lex_state_t * state, scpi_token_t * token) LOCAL;
+    int scpiLex_Semicolon(lex_state_t * state, scpi_token_t * token) LOCAL;
+    int scpiLex_Colon(lex_state_t * state, scpi_token_t * token) LOCAL;
+    int scpiLex_NewLine(lex_state_t * state, scpi_token_t * token) LOCAL;
+    int scpiLex_SpecificCharacter(lex_state_t * state, scpi_token_t * token, char chr) LOCAL;
 
 #ifdef	__cplusplus
 }
 #endif
 
-#endif	/* SCPI_UTILS_H */
+#endif	/* SCPI_LEXER_H */
 

@@ -45,27 +45,33 @@ size_t SCPI_Write(scpi_t * context, const char * data, size_t len) {
     return fwrite(data, 1, len, stdout);
 }
 
-int SCPI_Error(scpi_t * context, int_fast16_t err) {
-    (void) context;
-
-    fprintf(stderr, "**ERROR: %d, \"%s\"\r\n", (int32_t) err, SCPI_ErrorTranslate(err));
-    return 0;
-}
-
-scpi_result_t SCPI_Srq(scpi_t * context) {
-    scpi_reg_val_t stb = SCPI_RegGet(context, SCPI_REG_STB);
-    fprintf(stderr, "**SRQ: 0x%X (%d)\r\n", stb, stb);
+scpi_result_t SCPI_Flush(scpi_t * context) {
     return SCPI_RES_OK;
 }
 
-scpi_result_t SCPI_Test(scpi_t * context) {
-    fprintf(stderr, "**Test\r\n");
+int SCPI_Error(scpi_t * context, int_fast16_t err) {
+    (void) context;
+
+    fprintf(stderr, "**ERROR: %d, \"%s\"\r\n", (int16_t) err, SCPI_ErrorTranslate(err));
+    return 0;
+}
+
+scpi_result_t SCPI_Control(scpi_t * context, scpi_ctrl_name_t ctrl, scpi_reg_val_t val) {
+    if (SCPI_CTRL_SRQ == ctrl) {
+        fprintf(stderr, "**SRQ: 0x%X (%d)\r\n", val, val);
+    } else {
+        fprintf(stderr, "**CTRL %02x: 0x%X (%d)\r\n", ctrl, val, val);
+    }
     return SCPI_RES_OK;
 }
 
 scpi_result_t SCPI_Reset(scpi_t * context) {
     fprintf(stderr, "**Reset\r\n");
     return SCPI_RES_OK;
+}
+
+scpi_result_t SCPI_SystemCommTcpipControlQ(scpi_t * context) {
+    return SCPI_RES_ERR;
 }
 
 /*
@@ -90,10 +96,10 @@ int main(int argc, char** argv) {
     TEST_SCPI_INPUT(""); // emulate command timeout
 
     TEST_SCPI_INPUT("*ESE\r\n"); // cause error -109, missing parameter
-    TEST_SCPI_INPUT("*ESE 0x20\r\n");
+    TEST_SCPI_INPUT("*ESE #H20\r\n");
 
-    TEST_SCPI_INPUT("*SRE 0xFF\r\n");
-    
+    TEST_SCPI_INPUT("*SRE #HFF\r\n");
+
     TEST_SCPI_INPUT("IDN?\r\n"); // cause error -113, undefined header
 
     TEST_SCPI_INPUT("SYST:ERR?\r\n");
@@ -107,7 +113,10 @@ int main(int argc, char** argv) {
     TEST_SCPI_INPUT("meas:volt:dc? def, 0.00001\r\n");
     TEST_SCPI_INPUT("meas:volt:dc? 0.00001\r\n");
 
-
+    TEST_SCPI_INPUT("test:text 'a'\r\n");
+    TEST_SCPI_INPUT("test:text 'a a'\r\n");
+    TEST_SCPI_INPUT("test:text 'aa a'\r\n");
+    TEST_SCPI_INPUT("test:text 'aaa aaaa'\r\n");
     //printf("%.*s %s\r\n",  3, "asdadasdasdasdas", "b");
     // interactive demo
     //char smbuffer[10];

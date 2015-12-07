@@ -26,42 +26,30 @@
  */
 
 /**
- * @file   scpi_fifo.h
- * @date   Thu Nov 15 10:58:45 UTC 2012
+ * @file   parser_private.h
  * 
- * @brief  basic FIFO implementation
+ * @brief  SCPI Parser private definitions
  * 
  * 
  */
 
-#ifndef SCPI_FIFO_H
-#define	SCPI_FIFO_H
+#ifndef SCPI_PARSER_PRIVATE_H
+#define	SCPI_PARSER_PRIVATE_H
 
 #include "types.h"
+#include "utils_private.h"
 
 #ifdef	__cplusplus
 extern "C" {
 #endif
 
-
-#define FIFO_SIZE 16
-
-    struct _fifo_t {
-        INT16 wr;
-        INT16 rd;
-        INT16 size;
-        INT16 data[FIFO_SIZE];
-    };
-    typedef struct _fifo_t fifo_t;
-
-    void fifo_init(fifo_t * fifo);
-    void fifo_clear(fifo_t * fifo);
-    boolean fifo_add(fifo_t * fifo, INT16 value);
-    boolean fifo_remove(fifo_t * fifo, INT16 * value);
-    boolean fifo_count(fifo_t * fifo, INT16 * value);
+    int scpiParser_parseProgramData(lex_state_t * state, scpi_token_t * token) LOCAL;
+    int scpiParser_parseAllProgramData(lex_state_t * state, scpi_token_t * token, int * numberOfParameters) LOCAL;
+    int scpiParser_detectProgramMessageUnit(scpi_parser_state_t * state, char * buffer, int len) LOCAL;
 
 #ifdef	__cplusplus
 }
 #endif
 
-#endif	/* SCPI_FIFO_H */
+#endif	/* SCPI_PARSER_PRIVATE_H */
+
